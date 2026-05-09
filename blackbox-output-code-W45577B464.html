@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pilot Citilink Hub</title>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="PilotHub">
+    
+    <!-- Favicon & Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-72.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --accent: #ff6b6b;
+            --success: #51cf66;
+            --warning: #feca57;
+            --dark: #2d3748;
+            --light: #f7fafc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            min-height: 100vh;
+            padding: 10px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--accent), var(--warning));
+            color: white;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header::before {
+            content: '✈️';
+            font-size: 3em;
+            display: block;
+            margin-bottom: 10px;
+        }
+        
+        .header h1 {
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .install-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 15px;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+        
+        .install-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+        
+        .install-btn.hidden {
+            display: none;
+        }
+        
+        .search-box {
+            padding: 25px;
+            background: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 50px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+        
+        .stats {
+            padding: 0 25px 25px;
+            display: flex;
+            justify-content: space-around;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 1.8em;
+            font-weight: bold;
+            display: block;
+        }
+        
+        .categories {
+            padding: 25px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .category {
+            margin-bottom: 35px;
+        }
+        
+        .category h3 {
+            color: var(--dark);
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            font-weight: 700;
+            border-left: 5px solid var(--primary);
+            padding-left: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .link-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
+        
+        .link-item {
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .link-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transform: scaleX(0);
+            transition: transform 0.3s;
+        }
+        
+        .link-item:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            border-color: var(--primary);
+        }
+        
+        .link-item:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .link-title {
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        
+        .link-url {
+            color: var(--primary);
+            font-size: 0.85em;
+            word-break: break-all;
+            margin-bottom: 10px;
+            font-family: monospace;
+        }
+        
+        .link-desc {
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        
+        .no-results svg {
+            width: 80px;
+            height: 80px;
+            opacity: 0.5;
+            margin-bottom: 20px;
+        }
+        
+        /* PWA Offline */
+        .offline-notice {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--warning);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+        }
+        
+        .offline-notice.show {
+            transform: translateX(0);
+        }
+        
+        @media (max-width: 768px) {
+            .stats {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .header h1 {
+                font-size: 1.6em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Pilot Citilink Hub</h1>
+            <p>Link Penting Pilot Citilink - Offline Ready</p>
+            <button class="install-btn hidden" id="installBtn">
+                💾 Install App
+            </button>
+        </div>
+        
+        <div class="stats" id="stats">
+            <div class="stat-item">
+                <span class="stat-number" id="totalLinks">-</span>
+                <span>Total Links</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="categoriesCount">-</span>
+                <span>Kategori</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="status">Online</span>
+                <span>Status</span>
+            </div>
+        </div>
+        
+        <div class="search-box">
+            <input type="text" class="search-input" id="searchInput" 
+                   placeholder="🔍 Cari link (roster, training, NOTAM, dll)">
+        </div>
+        
+        <div class="categories" id="linksContainer">
+            <!-- Dynamic content -->
+        </div>
+    </div>
+    
+    <!-- Offline Notice -->
+    <div class="offline-notice" id="offlineNotice">
+        📱 Offline Mode
+    </div>
+
+    <script>
+        // Data Links (bisa diupdate via Service Worker)
+        const linksData = [
+            {
+                category: "📋 Operasional Harian",
+                links: [
+                    { title: "Crew Rostering", url: "https://roster.citilink.co.id", desc: "Jadwal terbang bulanan" },
+                    { title: "Flight Ops Portal", url: "https://ops.citilink.co.id", desc: "Portal operasi lengkap" },
+                    { title: "NOTAM Live", url: "https://notam.airnavradar.com", desc: "NOTAM real-time semua bandara" },
+                    { title: "METAR/TAF", url: "https://metar-taf.com", desc: "Cuaca bandara terkini" }
+                ]
+            },
+            {
+                category: "🎓 Training & Sim",
+                links: [
+                    { title: "Training Portal CGM", url: "https://training.citilink.co.id", desc: "E-learning & recurrent" },
+                    { title: "Simulator Booking", url: "https://simulator.citilink.co.id", desc: "Reservasi Jakarta/Bali" },
+                    { title: "Line Check Schedule", url: "https://linecheck.citilink.co.id", desc: "Jadwal line check" }
+                ]
+            },
+            {
+                category: "📄 Dokumen & Charts",
+                links: [
+                    { title: "QRH A320", url: "https://docs.citilink.co.id/qrh-a320", desc: "Quick Reference Handbook" },
+                    { title: "SOP Terbaru", url: "https://sop.citilink.co.id", desc: "Standard Operating Procedure" },
+                    { title: "Jeppesen Charts", url: "https://charts.jeppesen.com", desc: "Peta navigasi lengkap" }
+                ]
+            },
+            {
+                category: "💼 HR & Admin",
+                links: [
+                    { title: "Employee Self Service", url: "https://employee.citilink.co.id", desc: "Payroll & personal data" },
+                    { title: "Cuti & Absen", url: "https://leave.citilink.co.id", desc: "Pengajuan cuti digital" },
+                    { title: "Crew Report", url: "https://report.citilink.co.id", desc: "Laporan penerbangan" }
+                ]
+            },
+            {
+                category: "📱 Mobile Tools",
+                links: [
+                    { title: "ForeFlight EFB", url: "https://foreflight.com", desc: "Electronic Flight Bag iPad" },
+                    { title: "Boeing Perf Tool", url: "https://boeing.com/performance", desc: "A320 performance calculator" },
+                    { title: "FlightAware Live", url: "https://flightaware.com/live", desc: "Tracking penerbangan live" }
+                ]
+            }
+        ];
+
+        // PWA Installation
+        let deferredPrompt;
+        const installBtn = document.getElementById('installBtn');
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.classList.remove('hidden');
+        });
+        
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    installBtn.classList.add('hidden');
+                    deferredPrompt = null;
+                }
+            }
+        });
+        
+        // Network Status
+        const statusEl = document.getElementById('status');
+        const offlineNotice = document.getElementById('offlineNotice');
+        
+        window.addEventListener('online', () => {
+            statusEl.textContent = 'Online ✅';
+            statusEl.parentElement.style.background = 'linear-gradient(135deg, var(--success), #40c057)';
+            offlineNotice.classList.remove('show');
+        });
+        
+        window.addEventListener('offline', () => {
+            statusEl.textContent = 'Offline 📱';
+            statusEl.parentElement.style.background = 'linear-gradient(135deg, var(--warning), #fa8c16)';
+            offlineNotice.classList.add('show');
+        });
+
+        // Render Functions
+        function updateStats() {
+            document.getElementById('totalLinks').textContent = 
+                linksData.reduce((total, cat) => total + cat.links.length, 0);
+            document.getElementById('categoriesCount').textContent = linksData.length;
+        }
+        
+        function renderLinks(searchTerm = '') {
+            const container = document.getElementById('linksContainer');
+            const term = searchTerm.toLowerCase();
+            
+            if (term === '') {
+                container.innerHTML = linksData.map(category => `
+                    <div class="category">
+                        <h3>${category.category}</h3>
+                        <div class="link-grid">
+                            ${category.links.map(link => createLinkItem(link)).join('')}
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                const filtered = linksData.flatMap(cat => 
+                    cat.links.filter(link => 
+                        link.title.toLowerCase().includes(term) || 
+                        link.desc.toLowerCase().includes(term)
+                    ).map(link => ({...link, category: cat.category}))
+                );
+                
+                container.innerHTML = filtered.length ? `
+                    <div class="category">
+                        <h3>🔍 ${filtered.length} Hasil untuk "${searchTerm}"</h3>
+                        <div class="link-grid">
+                            ${filtered.map(createLinkItem).join('')}
+                        </div>
+                    </div>
+                ` : `
+                    <div class="no-results">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M9 12l2 2 4-4"/>
+                        </svg>
+                        <h3>Tidak ada hasil</h3>
+                        <p>Coba kata kunci lain seperti "roster", "training", atau "NOTAM"</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function createLinkItem({title, url, desc}) {
+            return `
+                <div class="link-item" onclick="window.open('${url}', '_blank', 'noopener,noreferrer')">
+                    <div class="link-title">${title}</div>
+                    <div class="link-url">${url.replace('https://', '').replace('http://', '')}</div>
+                    <div class="link-desc">${desc}</div>
+                </div>
+            `;
+        }
+        
+        // Event Listeners
+        document.getElementById('searchInput').addEventListener('input', (e) => 
+            renderLinks(e.target.value)
+        );
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStats();
+            renderLinks();
+        });
+    </script>
+</body>
+</html>
