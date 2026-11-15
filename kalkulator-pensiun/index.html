@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard Uang Penghargaan Pensiun</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: panel input di kiri, hitung mundur + hasil di kanan; satu kolom di ponsel. */
+:root{
+  --bg:#f3f5f9; --card:#ffffff; --ink:#14213d; --muted:#5b6579; --line:#d9dfea;
+  --accent:#0b5cad; --accent-soft:#e3eefb; --warn:#b45309; --warn-soft:#fdf0dc; --good:#157347; --good-soft:#e1f3e9;
+  --font:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1522; --card:#162033; --ink:#e8edf6; --muted:#9aa7bd; --line:#2a3750;
+    --accent:#6aaeff; --accent-soft:#1b2c47; --warn:#f2b45f; --warn-soft:#3a2d17; --good:#5fd194; --good-soft:#163326; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1522; --card:#162033; --ink:#e8edf6; --muted:#9aa7bd; --line:#2a3750;
+  --accent:#6aaeff; --accent-soft:#1b2c47; --warn:#f2b45f; --warn-soft:#3a2d17; --good:#5fd194; --good-soft:#163326; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--font);padding:20px 16px 40px}
+.wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+header h1{font-size:22px;margin:0 0 2px;text-wrap:balance;font-weight:600}
+header p{margin:0;color:var(--muted);font-size:13px}
+.grid{display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start}
+@media (max-width:820px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
+.card h2{font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:0 0 12px;font-weight:600}
+.stack{display:flex;flex-direction:column;gap:14px}
+label{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:500}
+label small{font-weight:400;color:var(--muted)}
+input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.opt{border-top:1px dashed var(--line);padding-top:12px}
+.opt summary{cursor:pointer;font-size:13px;color:var(--accent);font-weight:500}
+.opt .stack{margin-top:12px}
+button{font:inherit;font-weight:500;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;padding:8px 12px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+.status{border-radius:8px;padding:10px 12px;font-size:13px;font-weight:500}
+.status.ok{background:var(--good-soft);color:var(--good)}
+.status.warn{background:var(--warn-soft);color:var(--warn)}
+.right{display:flex;flex-direction:column;gap:16px}
+.count{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.tile{background:var(--accent-soft);border-radius:8px;padding:12px 8px;text-align:center}
+.tile b{display:block;font:600 40px/1.1 var(--mono);font-variant-numeric:tabular-nums;color:var(--accent)}
+.tile span{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:12px;font-size:13px;color:var(--muted)}
+.meta strong{color:var(--ink);font-weight:600}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin-top:12px}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:6px}
+.barlabel{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:4px}
+.result{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between}
+.big{font:600 34px/1.1 var(--mono);font-variant-numeric:tabular-nums}
+.sub{color:var(--muted);font-size:13px}
+.rows{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px}
+.rows div{border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.rows div span{display:block;font-size:12px;color:var(--muted)}
+.rows div b{font:600 15px var(--mono);font-variant-numeric:tabular-nums}
+svg{width:100%;height:auto;display:block}
+.note{font-size:12px;color:var(--muted)}
+.chart-wrap{overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Dashboard Uang Penghargaan Pensiun</h1>
+    <p>PKB PT Citilink Indonesia 2026–2027, Lampiran IV. Data awal adalah contoh; ganti dengan data Anda.</p>
+  </header>
+
+  <div class="grid">
+    <section class="card" aria-labelledby="in">
+      <h2 id="in">Data pegawai</h2>
+      <div class="stack">
+        <label for="gol">Golongan
+          <select id="gol"><option>Darat</option><option>Pilot</option><option>Awak Kabin</option></select>
+          <small id="usia-info">Usia pensiun normal 57 tahun (Pasal 52)</small>
+        </label>
+        <label for="lahir">Tanggal lahir <input type="date" id="lahir"></label>
+        <label for="pkwtt">Tanggal pengangkatan PKWTT <small>Awal perhitungan masa kerja aktif</small><input type="date" id="pkwtt"></label>
+        <label for="gaji">Gaji pokok terakhir (Rp/bulan) <input type="text" inputmode="numeric" id="gaji"></label>
+        <details class="opt">
+          <summary>Pengaturan lanjutan</summary>
+          <div class="stack">
+            <label for="pensiun">Tanggal pensiun manual <small>Kosongkan untuk memakai tanggal lahir + usia pensiun normal</small><input type="date" id="pensiun"></label>
+            <label for="mka">Tanggal awal MKA manual <small>Untuk PKWT sebelum PKB 2023–2024 atau hubungan kerja sesudahnya (Lampiran VIII)</small><input type="date" id="mka"></label>
+          </div>
+        </details>
+        <button type="button" id="reset">Kembali ke data contoh</button>
+        <div id="status" class="status ok" role="status"></div>
+      </div>
+    </section>
+
+    <div class="right">
+      <section class="card" aria-labelledby="cd">
+        <h2 id="cd">Hitung mundur pensiun</h2>
+        <div class="count" aria-live="polite">
+          <div class="tile"><b id="cy">0</b><span>Tahun</span></div>
+          <div class="tile"><b id="cm">0</b><span>Bulan</span></div>
+          <div class="tile"><b id="cdd">0</b><span>Hari</span></div>
+        </div>
+        <div class="bar" aria-hidden="true"><i id="prog" style="width:0%"></i></div>
+        <div class="barlabel"><span id="p-left">Mulai bekerja</span><span id="p-pct"></span><span id="p-right">Pensiun</span></div>
+        <div class="meta">
+          <span>Tanggal pensiun <strong id="m-pensiun">-</strong></span>
+          <span>Total hari tersisa <strong id="m-total">-</strong></span>
+          <span>Usia saat ini <strong id="m-usia">-</strong></span>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="hs">
+        <h2 id="hs">Uang Penghargaan Pensiun</h2>
+        <div class="result">
+          <div><div class="big" id="total">Rp 0</div><div class="sub" id="bulan">0 bulan gaji pokok</div></div>
+          <div class="sub" id="mka-txt">Masa kerja aktif -</div>
+        </div>
+        <div class="rows">
+          <div><span>Uang Pesangon (UP)</span><b id="r-up">-</b></div>
+          <div><span>2 × UP</span><b id="r-2up">-</b></div>
+          <div><span>UPMK</span><b id="r-upmk">-</b></div>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="ch">
+        <h2 id="ch">Posisi pada Tabel 4 (bulan gaji pokok menurut masa kerja)</h2>
+        <div class="chart-wrap"><div id="chart"></div></div>
+        <p class="note">Rumus: 2 × Uang Pesangon + 1 × Uang Penghargaan Masa Kerja, dengan masa kerja dalam tahun penuh (maksimal 24). Dasar upah: gaji pokok (Pasal 71). Hasil indikatif; hak final ditetapkan Perusahaan.</p>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+const UP=[1,2,3,4,5,6,7,8,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9];
+const UPMK=[0,0,0,2,2,2,3,3,3,4,4,4,5,5,5,6,6,6,7,7,7,8,8,8,10];
+const USIA={"Darat":[57,"Pasal 52"],"Pilot":[60,"Pasal 125"],"Awak Kabin":[46,"Pasal 166"]};
+const DEF={gol:"Darat",lahir:"1975-03-20",pkwtt:"2001-07-01",gaji:"12000000",pensiun:"",mka:""};
+const $=id=>document.getElementById(id);
+const ids=["gol","lahir","pkwtt","gaji","pensiun","mka"];
+const rp=n=>"Rp "+Math.round(n).toLocaleString("id-ID");
+const MON=["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+const fmt=d=>d.getDate()+" "+MON[d.getMonth()]+" "+d.getFullYear();
+const pd=s=>{if(!s)return null;const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
+const dim=(y,m)=>new Date(y,m+1,0).getDate();
+function ymd(a,b){ // selisih kalender a -> b (a <= b)
+  let y=b.getFullYear()-a.getFullYear(), m=b.getMonth()-a.getMonth(), d=b.getDate()-a.getDate();
+  if(d<0){m--; const pm=b.getMonth()-1; d+=dim(pm<0?b.getFullYear()-1:b.getFullYear(),(pm+12)%12);}
+  if(m<0){y--; m+=12}
+  return {y,m,d};
+}
+function save(){try{const o={};ids.forEach(k=>o[k]=$(k).value);localStorage.setItem("upp-pkb",JSON.stringify(o))}catch(e){}}
+function load(){let o=DEF;try{const s=localStorage.getItem("upp-pkb");if(s)o=Object.assign({},DEF,JSON.parse(s))}catch(e){}fill(o)}
+function fill(o){ids.forEach(k=>{$(k).value=o[k]||""});$("gaji").value=fmtGaji(o.gaji)}
+function fmtGaji(v){const n=String(v).replace(/\D/g,"");return n?Number(n).toLocaleString("id-ID"):""}
+function gajiNum(){return Number($("gaji").value.replace(/\D/g,""))||0}
+
+function chart(cur){
+  const W=720,H=190,L=28,B=26,T=10,n=25,bw=(W-L)/n;
+  const tot=UP.map((u,i)=>2*u+UPMK[i]), max=30;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Grafik bulan uang penghargaan pensiun menurut masa kerja">`;
+  [0,10,20,30].forEach(v=>{const y=T+(H-T-B)*(1-v/max);s+=`<line x1="${L}" x2="${W}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${L-4}" y="${y+4}" text-anchor="end" font-size="10" fill="var(--muted)">${v}</text>`});
+  tot.forEach((v,i)=>{const h=(H-T-B)*v/max,x=L+i*bw+2,y=H-B-h,on=i===cur;
+    s+=`<rect x="${x}" y="${y}" width="${bw-4}" height="${h}" rx="2" fill="${on?"var(--warn)":"var(--accent)"}" opacity="${on?1:.45}"/>`;
+    if(on)s+=`<text x="${x+(bw-4)/2}" y="${y-4}" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink)">${v}</text>`;
+    if(i%4===0||i===24)s+=`<text x="${x+(bw-4)/2}" y="${H-8}" text-anchor="middle" font-size="10" fill="var(--muted)">${i===24?"24+":i}</text>`});
+  s+=`<text x="${W}" y="${H-8}" text-anchor="end" font-size="10" fill="var(--muted)"> </text></svg>`;
+  $("chart").innerHTML=s;
+}
+function setStatus(t,ok){const e=$("status");e.textContent=t;e.className="status "+(ok?"ok":"warn")}
+
+function render(){
+  const g=$("gol").value, [age,pas]=USIA[g];
+  $("usia-info").textContent=`Usia pensiun normal ${age} tahun (${pas})`;
+  const lahir=pd($("lahir").value), pkwtt=pd($("pkwtt").value), man=pd($("pensiun").value), mkaM=pd($("mka").value);
+  const gaji=gajiNum();
+  let normal=lahir?new Date(lahir.getFullYear()+age,lahir.getMonth(),lahir.getDate()):null;
+  const pens=man||normal, start=mkaM||pkwtt;
+  const today=new Date(); today.setHours(0,0,0,0);
+  // hitung mundur
+  if(!pens){["cy","cm","cdd"].forEach(i=>$(i).textContent="-");$("m-pensiun").textContent="-";$("m-total").textContent="-";}
+  else{
+    const past=pens<=today, a=past?pens:today, b=past?today:pens, r=ymd(a,b);
+    $("cy").textContent=r.y;$("cm").textContent=r.m;$("cdd").textContent=r.d;
+    $("cd").textContent=past?"Sudah pensiun sejak":"Hitung mundur pensiun";
+    $("m-pensiun").textContent=fmt(pens);
+    $("m-total").textContent=(past?"-":"")+Math.round((b-a)/864e5).toLocaleString("id-ID")+" hari";
+  }
+  $("m-usia").textContent=lahir?(()=>{const r=ymd(lahir,today<lahir?lahir:today);return r.y+" th "+r.m+" bln"})():"-";
+  // progres masa kerja
+  if(start&&pens&&pens>start){const pct=Math.max(0,Math.min(100,(today-start)/(pens-start)*100));
+    $("prog").style.width=pct+"%";$("p-pct").textContent=pct.toFixed(0)+"% perjalanan karier";$("p-left").textContent=fmt(start);$("p-right").textContent=fmt(pens);}
+  else{$("prog").style.width="0%";$("p-pct").textContent="";}
+  // hasil
+  let msg="OK",ok=true;
+  if(!gaji){msg="Isi gaji pokok terakhir.";ok=false}
+  else if(!start){msg="Isi tanggal pengangkatan PKWTT.";ok=false}
+  else if(!pens){msg="Isi tanggal lahir atau tanggal pensiun manual.";ok=false}
+  else if(pens<start){msg="Tanggal pensiun harus setelah tanggal awal masa kerja.";ok=false}
+  if(!ok){setStatus(msg,false);["total"].forEach(i=>$(i).textContent="Rp 0");$("bulan").textContent="0 bulan gaji pokok";$("mka-txt").textContent="Masa kerja aktif -";["r-up","r-2up","r-upmk"].forEach(i=>$(i).textContent="-");chart(-1);return}
+  const r=ymd(start,pens), idx=Math.min(r.y,24), up=UP[idx], upmk=UPMK[idx], bulan=2*up+upmk;
+  $("total").textContent=rp(bulan*gaji);
+  $("bulan").textContent=`${bulan} bulan × ${rp(gaji)}`;
+  $("mka-txt").textContent=`Masa kerja aktif pada tanggal pensiun: ${r.y} tahun ${r.m} bulan`+(r.y>24?" (tabel maksimal 24 tahun)":"");
+  $("r-up").textContent=up+" bulan";$("r-2up").textContent=rp(2*up*gaji);$("r-upmk").textContent=upmk+" bulan = "+rp(upmk*gaji);
+  chart(idx);
+  if(!man&&normal&&false){}
+  if(man&&normal&&man<normal)setStatus("Pensiun sebelum usia normal: bukan pensiun normal. Lihat Pasal 53 (usia 45 tahun dan kerja 5 tahun).",false);
+  else if(man&&man>normal&&normal)setStatus("Tanggal manual setelah usia pensiun normal (perpanjangan kontrak?). Hak mengikuti tanggal PHK.",false);
+  else setStatus(man?"OK (tanggal pensiun manual)":"OK",true);
+}
+ids.forEach(k=>$(k).addEventListener("input",()=>{if(k==="gaji")$("gaji").value=fmtGaji($("gaji").value);save();render()}));
+$("reset").addEventListener("click",()=>{fill(DEF);save();render()});
+load();render();
+setInterval(render,60000);
+</script>
+</body>
+</html>
